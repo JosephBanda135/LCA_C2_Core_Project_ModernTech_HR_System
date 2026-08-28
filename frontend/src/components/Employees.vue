@@ -47,7 +47,7 @@ export default {
   },
 
   watch: {
-    // Whenever App.vue sets employeesError (a failed API call), show it
+    // Whenever App.vue sets employeesError, show it
     // using the same inline alert we already use for validation messages.
     errorMessage(newValue) {
       if (newValue) {
@@ -70,7 +70,7 @@ export default {
 
     addEmployee() {
       // Client-side validation - a first check before the request even goes out.
-      // The server still validates everything again (and always must - never trust the client).
+      // The server still validates everything again (and always must ).
       if (
         !this.newEmployee.first_name ||
         !this.newEmployee.last_name ||
@@ -387,7 +387,7 @@ export default {
         <p>Loading employees...</p>
       </div>
 
-      <!-- Empty state - shown once loading is done but there's genuinely no data -->
+      <!-- Empty state - shown once loading is done  -->
       <div v-else-if="employees.length === 0" class="text-center p-4">
         <p>No employees found. Add your first employee above.</p>
       </div>

@@ -24,109 +24,24 @@ export default {
       currentPage: "login",
       token: null,
       user: null,
-      // Employees are now loaded from the real API
+      // Employees are now loaded from the real API - see fetchEmployees()
       employees: [],
       employeesLoading: false,
       employeesError: "",
       // Departments are used to populate the department dropdown in the
       // Add/Edit Employee forms - loaded from GET /departments
       departments: [],
-      // Dummy Leave Request Data
-      leaveRequests: [
-        {
-          id: 1,
-          employeeName: "John Smith",
-          leaveType: "Sick Leave",
-          days: 2,
-          status: "Pending",
-        },
-
-        {
-          id: 2,
-          employeeName: "Sarah Johnson",
-          leaveType: "Annual Leave",
-          days: 5,
-          status: "Approved",
-        },
-      ],
-      // Dummy Attendance Records
-      attendanceRecords: [
-        {
-          id: 1,
-          employeeName: "John Smith",
-          status: "Present",
-        },
-        {
-          id: 2,
-          employeeName: "Sarah Johnson",
-          status: "Absent",
-        },
-        {
-          id: 3,
-          employeeName: "Mike Brown",
-          status: "Present",
-        },
-        {
-          id: 4,
-          employeeName: "David Wilson",
-          status: "Present",
-        },
-        {
-          id: 5,
-          employeeName: "Emma Davis",
-          status: "Absent",
-        },
-        {
-          id: 6,
-          employeeName: "James Miller",
-          status: "Present",
-        },
-        {
-          id: 7,
-          employeeName: "Sophia Moore",
-          status: "Present",
-        },
-        {
-          id: 8,
-          employeeName: "Daniel Taylor",
-          status: "Absent",
-        },
-        {
-          id: 9,
-          employeeName: "Olivia Anderson",
-          status: "Present",
-        },
-        {
-          id: 10,
-          employeeName: "William Thomas",
-          status: "Present",
-        },
-        {
-          id: 11,
-          employeeName: "Ava White",
-          status: "Present",
-        },
-        {
-          id: 12,
-          employeeName: "Benjamin Harris",
-          status: "Absent",
-        },
-        {
-          id: 13,
-          employeeName: "Charlotte Martin",
-          status: "Present",
-        },
-        {
-          id: 14,
-          employeeName: "Henry Thompson",
-          status: "Present",
-        },
-        {
-          id: 15,
-          employeeName: "Grace Walker",
-          status: "Present",
-        },
-      ],
+      // Leave/time-off requests now loaded from the real API - see fetchLeaveRequests()
+      leaveRequests: [],
+      leaveRequestsLoading: false,
+      leaveRequestsError: "",
+      // Attendance and payroll now loaded from the real API
+      attendanceRecords: [],
+      attendanceLoading: false,
+      attendanceError: "",
+      payrollRecords: [],
+      payrollLoading: false,
+      payrollError: "",
     };
   },
   methods: {
@@ -197,22 +112,84 @@ export default {
       }
     },
 
-    //Adds Leave request
-    addLeaveRequest(request) {
-      this.leaveRequests.push(request);
+    // Fetches real time-off requests from the database via the API.
+    async fetchLeaveRequests() {
+      this.leaveRequestsLoading = true;
+      this.leaveRequestsError = "";
+      try {
+        const response = await api.get("/time-off");
+        this.leaveRequests = response.data;
+      } catch (err) {
+        this.leaveRequestsError =
+          err.response?.data?.error || "Failed to load leave requests.";
+      } finally {
+        this.leaveRequestsLoading = false;
+      }
     },
 
-    //Saves leave request data to LocalStorage (employees are now saved
-    //in the real database, so they no longer need localStorage)
-    saveData() {
+    // Adds Leave request - sends it to the database via the API
+    async addLeaveRequest(request) {
+      this.leaveRequestsError = "";
       try {
-        localStorage.setItem(
-          "leaveRequests",
-          JSON.stringify(this.leaveRequests),
-        );
-      } catch (error) {
-        console.error("Error saving data:", error);
-        alert("Could not save data. Try again.");
+        const response = await api.post("/time-off", request);
+        this.leaveRequests.unshift(response.data);
+      } catch (err) {
+        this.leaveRequestsError =
+          err.response?.data?.error || "Failed to submit leave request.";
+      }
+    },
+
+    // Fetches real attendance records from the database
+    async fetchAttendance() {
+      this.attendanceLoading = true;
+      this.attendanceError = "";
+      try {
+        const response = await api.get("/attendance");
+        this.attendanceRecords = response.data;
+      } catch (err) {
+        this.attendanceError =
+          err.response?.data?.error || "Failed to load attendance records.";
+      } finally {
+        this.attendanceLoading = false;
+      }
+    },
+
+    // Records new attendance for an employee
+    async addAttendance(record) {
+      this.attendanceError = "";
+      try {
+        const response = await api.post("/attendance", record);
+        this.attendanceRecords.unshift(response.data);
+      } catch (err) {
+        this.attendanceError =
+          err.response?.data?.error || "Failed to record attendance.";
+      }
+    },
+
+    // Fetches real payroll history from the database
+    async fetchPayroll() {
+      this.payrollLoading = true;
+      this.payrollError = "";
+      try {
+        const response = await api.get("/payroll");
+        this.payrollRecords = response.data;
+      } catch (err) {
+        this.payrollError =
+          err.response?.data?.error || "Failed to load payroll records.";
+      } finally {
+        this.payrollLoading = false;
+      }
+    },
+
+    // Generates (creates) a new payroll record
+    async generatePayroll(record) {
+      this.payrollError = "";
+      try {
+        const response = await api.post("/payroll", record);
+        this.payrollRecords.unshift(response.data);
+      } catch (err) {
+        this.payrollError =
+          err.response?.data?.error || "Failed to generate payroll.";
       }
     },
 
@@ -226,6 +203,9 @@ export default {
       this.currentPage = "dashboard";
       this.fetchEmployees();
       this.fetchDepartments();
+      this.fetchLeaveRequests();
+      this.fetchAttendance();
+      this.fetchPayroll();
     },
 
     // Logs the user out and returns to the login screen
@@ -233,13 +213,16 @@ export default {
       this.token = null;
       this.user = null;
       this.employees = [];
+      this.leaveRequests = [];
+      this.attendanceRecords = [];
+      this.payrollRecords = [];
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       this.currentPage = "login";
     },
   },
 
-  //Restores the logged-in session (if any) and loads saved leave request data
+  //Restores the logged-in session (if any), then loads real data from the API
   mounted() {
     const savedToken = localStorage.getItem("token");
     const savedUser = localStorage.getItem("user");
@@ -250,21 +233,10 @@ export default {
       this.currentPage = "dashboard";
       this.fetchEmployees();
       this.fetchDepartments();
+      this.fetchLeaveRequests();
+      this.fetchAttendance();
+      this.fetchPayroll();
     }
-
-    const savedLeaves = localStorage.getItem("leaveRequests");
-    if (savedLeaves) {
-      this.leaveRequests = JSON.parse(savedLeaves);
-    }
-  },
-  //Saves leave request data whenever it changes (employees now live in MySQL)
-  watch: {
-    leaveRequests: {
-      deep: true,
-      handler() {
-        this.saveData();
-      },
-    },
   },
 };
 </script>
@@ -296,19 +268,34 @@ export default {
     />
 
     <!--Payroll component-->
-    <Payroll v-if="currentPage === 'payroll'" :employees="employees" />
+    <Payroll
+      v-if="currentPage === 'payroll'"
+      :employees="employees"
+      :payrollRecords="payrollRecords"
+      :loading="payrollLoading"
+      :error-message="payrollError"
+      @generate-payroll="generatePayroll"
+    />
 
     <!--Leave Request component-->
     <LeaveRequests
       v-if="currentPage === 'leaveRequests'"
       :leaveRequests="leaveRequests"
+      :employees="employees"
+      :loading="leaveRequestsLoading"
+      :error-message="leaveRequestsError"
       @add-leave-request="addLeaveRequest"
+      @update-status="updateLeaveRequestStatus"
     />
 
     <!--Attendance component-->
     <Attendance
       v-if="currentPage === 'attendance'"
       :attendanceRecords="attendanceRecords"
+      :employees="employees"
+      :loading="attendanceLoading"
+      :error-message="attendanceError"
+      @add-attendance="addAttendance"
     />
   </template>
 </template>

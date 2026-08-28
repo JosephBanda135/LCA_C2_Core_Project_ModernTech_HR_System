@@ -56,7 +56,7 @@ export default {
           <h3>
             R{{
               employees
-                .reduce((total, e) => total + e.salary, 0)
+                .reduce((total, e) => total + Number(e.salary), 0)
                 .toLocaleString()
             }}
           </h3>
