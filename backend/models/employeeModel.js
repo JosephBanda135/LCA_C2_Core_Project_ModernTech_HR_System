@@ -5,7 +5,8 @@ async function getAll() {
   const [rows] = await pool.query(
     `SELECT employees.*, departments.name AS department_name
      FROM employees
-     INNER JOIN departments ON employees.department_id = departments.id`,
+     INNER JOIN departments ON employees.department_id = departments.id
+     ORDER BY employees.id`,
   );
   return rows;
 }
