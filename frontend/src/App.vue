@@ -193,6 +193,22 @@ export default {
       }
     },
 
+    // Approves or rejects a leave request - PUT /time-off/:id/status
+    async updateLeaveRequestStatus({ id, status }) {
+      this.leaveRequestsError = "";
+      try {
+        const response = await api.put(`/time-off/${id}/status`, { status });
+        const index = this.leaveRequests.findIndex((r) => r.id === id);
+        if (index !== -1) {
+          this.leaveRequests[index] = response.data;
+          this.leaveRequests = [...this.leaveRequests]; // triggers Vue reactivity
+        }
+      } catch (err) {
+        this.leaveRequestsError =
+          err.response?.data?.error || "Failed to update request status.";
+      }
+    },
+
     // Called when Login.vue emits "login-success"
     handleLoginSuccess(data) {
       this.token = data.token;
